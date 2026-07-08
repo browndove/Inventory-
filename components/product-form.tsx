@@ -1,0 +1,270 @@
+'use client'
+
+import { useState } from 'react'
+import { createProduct, updateProduct } from '@/app/actions/inventory'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { formatCedi } from '@/lib/utils'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
+
+interface ProductFormProps {
+  product?: any
+  onSuccess: () => void
+}
+
+export function ProductForm({ product, onSuccess }: ProductFormProps) {
+  const [formData, setFormData] = useState({
+    name: product?.name || '',
+    description: product?.description || '',
+    costPrice: product?.costPrice || '',
+    sellingPrice: product?.sellingPrice || '',
+    quantity: product?.quantity || '',
+    imageUrl: product?.imageUrl || '',
+    imageFile: product?.imageFile || '',
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadedImage, setUploadedImage] = useState<string>(product?.imageFile || product?.imageUrl || '')
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error ?? 'Upload failed')
+      }
+
+      setUploadedImage(data.url)
+      toast.success('Image uploaded')
+    } catch (error) {
+      console.error('Upload error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to upload image',
+      )
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const data = {
+        name: formData.name,
+        description: formData.description || undefined,
+        costPrice: parseFloat(formData.costPrice),
+        sellingPrice: parseFloat(formData.sellingPrice),
+        quantity: parseInt(formData.quantity),
+        imageUrl: formData.imageUrl || undefined,
+        imageFile: uploadedImage || undefined,
+      }
+
+      if (
+        !data.name ||
+        Number.isNaN(data.costPrice) ||
+        Number.isNaN(data.sellingPrice) ||
+        Number.isNaN(data.quantity)
+      ) {
+        toast.error('Please fill in all required fields')
+        setIsLoading(false)
+        return
+      }
+
+      if (data.costPrice < 0 || data.sellingPrice < 0) {
+        toast.error('Prices cannot be negative')
+        setIsLoading(false)
+        return
+      }
+
+      if (data.quantity < 0) {
+        toast.error('Quantity cannot be negative')
+        setIsLoading(false)
+        return
+      }
+
+      if (product) {
+        await updateProduct(product.id, data)
+        toast.success('Product updated successfully')
+      } else {
+        await createProduct(data)
+        toast.success('Product added successfully')
+      }
+
+      onSuccess()
+    } catch (error) {
+      console.error('Form error:', error)
+      toast.error(product ? 'Failed to update product' : 'Failed to add product')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Name */}
+      <div className="space-y-2">
+        <Label htmlFor="name" className="text-sm font-medium">
+          Product Name *
+        </Label>
+        <Input
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="e.g., Industrial Drill"
+          required
+        />
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2">
+        <Label htmlFor="description" className="text-sm font-medium">
+          Description
+        </Label>
+        <Textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Product details..."
+          className="resize-none"
+          rows={3}
+        />
+      </div>
+
+      {/* Prices */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor="costPrice" className="text-sm font-medium">
+            Cost Price *
+          </Label>
+          <Input
+            id="costPrice"
+            name="costPrice"
+            type="number"
+            step="0.01"
+            value={formData.costPrice}
+            onChange={handleChange}
+            placeholder="0.00"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sellingPrice" className="text-sm font-medium">
+            Selling Price *
+          </Label>
+          <Input
+            id="sellingPrice"
+            name="sellingPrice"
+            type="number"
+            step="0.01"
+            value={formData.sellingPrice}
+            onChange={handleChange}
+            placeholder="0.00"
+            required
+          />
+        </div>
+      </div>
+
+      {/* Quantity */}
+      <div className="space-y-2">
+        <Label htmlFor="quantity" className="text-sm font-medium">
+          Quantity *
+        </Label>
+        <Input
+          id="quantity"
+          name="quantity"
+          type="number"
+          value={formData.quantity}
+          onChange={handleChange}
+          placeholder="0"
+          required
+        />
+      </div>
+
+      {/* Image URL */}
+      <div className="space-y-2">
+        <Label htmlFor="imageUrl" className="text-sm font-medium">
+          Image URL
+        </Label>
+        <Input
+          id="imageUrl"
+          name="imageUrl"
+          type="url"
+          value={formData.imageUrl}
+          onChange={handleChange}
+          placeholder="https://example.com/image.jpg"
+        />
+      </div>
+
+      {/* Image Upload */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Upload Image</Label>
+        <div className="flex gap-2">
+          <Input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+            accept="image/*"
+            disabled={isUploading}
+            onChange={handleImageUpload}
+          />
+          {isUploading && <Loader2 className="h-5 w-5 animate-spin" />}
+        </div>
+        {uploadedImage && (
+          <p className="text-xs text-muted-foreground">Image uploaded: {uploadedImage.split('/').pop()}</p>
+        )}
+      </div>
+
+      {/* Profit Preview */}
+      {formData.costPrice && formData.sellingPrice && (
+        <div className="rounded-lg bg-muted/50 p-3">
+          <p className="text-xs text-muted-foreground">Profit per unit</p>
+          <p className="text-lg font-bold text-green-600 dark:text-green-400">
+            {formatCedi(parseFloat(formData.sellingPrice) - parseFloat(formData.costPrice))}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Margin: {parseFloat(formData.sellingPrice) > 0
+              ? (((parseFloat(formData.sellingPrice) - parseFloat(formData.costPrice)) / parseFloat(formData.sellingPrice)) * 100).toFixed(1)
+              : 0}%
+          </p>
+        </div>
+      )}
+
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {product ? 'Updating...' : 'Adding...'}
+          </>
+        ) : (
+          product ? 'Update Product' : 'Add Product'
+        )}
+      </Button>
+    </form>
+  )
+}
