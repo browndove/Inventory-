@@ -11,9 +11,15 @@ export function formatCedi(
   amount: number,
   options?: { minimumFractionDigits?: number; maximumFractionDigits?: number },
 ) {
+  const maximumFractionDigits = options?.maximumFractionDigits ?? 2
+  const minimumFractionDigits = Math.min(
+    options?.minimumFractionDigits ?? maximumFractionDigits,
+    maximumFractionDigits,
+  )
+
   const formatted = amount.toLocaleString('en-GH', {
-    minimumFractionDigits: options?.minimumFractionDigits ?? 2,
-    maximumFractionDigits: options?.maximumFractionDigits ?? 2,
+    minimumFractionDigits,
+    maximumFractionDigits,
   })
 
   return `${CEDI_SYMBOL}${formatted}`
