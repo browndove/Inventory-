@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Pool } from 'pg'
 import XLSX from 'xlsx'
+import { resolveDatabaseUrl } from './db-url.mjs'
 
 const EXCEL_FILE = 'DILITRUST FITNESS EQUIPMENTS.xlsx'
 const SECTION_HEADERS = new Set(['KETTLE BELL', 'HEX DUMBELL', 'NORMAL DUMBBELLS'])
@@ -146,7 +147,7 @@ function parseProductsFromWorkbook(filePath) {
 async function main() {
   loadEnvLocal()
 
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = resolveDatabaseUrl(process.env.DATABASE_URL)
   if (!databaseUrl) throw new Error('DATABASE_URL is not set')
 
   const excelPath = join(process.cwd(), EXCEL_FILE)
@@ -155,7 +156,6 @@ async function main() {
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    ssl: databaseUrl.includes('neon.tech') ? { rejectUnauthorized: false } : undefined,
   })
 
   const userResult = await pool.query(

@@ -7,6 +7,7 @@
 
 import { readFileSync } from 'node:fs'
 import { Pool } from 'pg'
+import { resolveDatabaseUrl } from './db-url.mjs'
 
 function loadEnvLocal() {
   try {
@@ -78,12 +79,11 @@ const fitnessProducts = [
 ]
 
 async function main() {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = resolveDatabaseUrl(process.env.DATABASE_URL)
   if (!databaseUrl) throw new Error('DATABASE_URL is not set')
 
   const pool = new Pool({
     connectionString: databaseUrl,
-    ssl: databaseUrl.includes('neon.tech') ? { rejectUnauthorized: false } : undefined,
   })
 
   const seedEmail =
