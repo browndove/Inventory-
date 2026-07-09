@@ -1,4 +1,7 @@
 import { formatCedi } from '@/lib/utils'
+import { RestockAlerts } from '@/components/restock-alerts'
+import type { RestockAlert } from '@/app/actions/inventory'
+import { LOW_STOCK_THRESHOLD } from '@/lib/inventory-constants'
 
 interface SalesInsightsProps {
   insights: {
@@ -18,9 +21,15 @@ interface SalesInsightsProps {
     totalRevenue: number
     totalUnits: number
   }
+  restockAlerts: RestockAlert[]
+  isDemo?: boolean
 }
 
-export function SalesInsights({ insights }: SalesInsightsProps) {
+export function SalesInsights({
+  insights,
+  restockAlerts,
+  isDemo,
+}: SalesInsightsProps) {
   const maxRevenue = Math.max(...insights.trend.map((day) => day.revenue), 1)
   const hasSales = insights.totalSales > 0
 
@@ -114,6 +123,17 @@ export function SalesInsights({ insights }: SalesInsightsProps) {
           )}
         </section>
       </div>
+
+      <section className="space-y-8">
+        <div>
+          <h3 className="text-base font-medium text-foreground">Needs restock</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {LOW_STOCK_THRESHOLD} units or fewer
+          </p>
+        </div>
+
+        <RestockAlerts items={restockAlerts} isDemo={isDemo} compact />
+      </section>
     </div>
   )
 }

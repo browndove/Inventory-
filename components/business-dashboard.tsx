@@ -13,6 +13,9 @@ import {
 } from 'recharts'
 import { formatCedi } from '@/lib/utils'
 import { CHART_COLORS, chartAxisStyle, chartGridStyle } from '@/lib/chart-styles'
+import { RestockAlerts } from '@/components/restock-alerts'
+import type { RestockAlert } from '@/app/actions/inventory'
+import { LOW_STOCK_THRESHOLD } from '@/lib/inventory-constants'
 
 type TrendPoint = {
   label: string
@@ -61,6 +64,8 @@ interface BusinessDashboardProps {
   stats: InventoryStats
   insights: BusinessInsights
   salesHistory: SaleRecord[]
+  restockAlerts: RestockAlert[]
+  isDemo?: boolean
 }
 
 function ChartTooltip({
@@ -131,6 +136,8 @@ export function BusinessDashboard({
   stats,
   insights,
   salesHistory,
+  restockAlerts,
+  isDemo,
 }: BusinessDashboardProps) {
   const hasSales = insights.totalSales > 0
   const profitMargin =
@@ -167,6 +174,27 @@ export function BusinessDashboard({
           <MetricCard key={metric.label} {...metric} />
         ))}
       </div>
+
+      <section className="space-y-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h3 className="text-base font-medium text-foreground">
+              Needs restock
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Products at {LOW_STOCK_THRESHOLD} units or fewer
+            </p>
+          </div>
+          {restockAlerts.length > 0 && (
+            <p className="text-sm tabular-nums text-muted-foreground">
+              {restockAlerts.length}{' '}
+              {restockAlerts.length === 1 ? 'product' : 'products'}
+            </p>
+          )}
+        </div>
+
+        <RestockAlerts items={restockAlerts} isDemo={isDemo} />
+      </section>
 
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
         <section className="space-y-8">

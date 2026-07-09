@@ -3,9 +3,10 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { products, sales } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, asc, lte } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { LOW_STOCK_THRESHOLD } from '@/lib/inventory-constants'
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -276,4 +277,57 @@ export async function getInventoryStats() {
     totalProfit,
     totalSalesRecords: allSales.length,
   }
+}
+
+export type RestockAlert = {
+  id: number
+  name: string
+  quantity: number
+  costPrice: number
+  sellingPrice: number
+  status: 'out' | 'low'
+}
+
+export async function getRestockAlerts(): Promise<RestockAlert[]> {
+  await getUserId()
+
+  const rows = await db
+    .select()
+    .from(products)
+    .where(lte(products.quantity, LOW_STOCK_THRESHOLD))
+    .orderBy(asc(products.quantity))
+
+  return rows.map((product) => ({
+    id: product.id,
+    name: product.name,
+    quantity: product.quantity ?? 0,
+    costPrice: parseFloat(product.costPrice as string),
+    sellingPrice: parseFloat(product.sellingPrice as string),
+    status: (product.quantity ?? 0) === 0 ? 'out' : 'low',
+  }))
+}
+
+export async function restockProduct(id: number, unitsToAdd: number) {
+  await getUserId()
+
+  if (!Number.isInteger(unitsToAdd) || unitsToAdd <= 0) {
+    throw new Error('Enter a valid quantity to add')
+  }
+
+  const product = await getProductById(id)
+  if (!product) throw new Error('Product not found')
+
+  const newQuantity = (product.quantity ?? 0) + unitsToAdd
+
+  const result = await db
+    .update(products)
+    .set({
+      quantity: newQuantity,
+      updatedAt: new Date(),
+    })
+    .where(eq(products.id, id))
+    .returning()
+
+  revalidatePath('/dashboard')
+  return result[0]
 }

@@ -99,7 +99,7 @@ const demoProducts = [
     description: 'Waterproof Bluetooth speaker with rich bass.',
     costPrice: '15.00',
     sellingPrice: '49.99',
-    quantity: 28,
+    quantity: 3,
     imageUrl:
       'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&h=800&fit=crop',
     imageFile: null,
@@ -127,12 +127,31 @@ const demoProducts = [
     description: 'Tempered glass screen protector pack, 5 pieces.',
     costPrice: '8.00',
     sellingPrice: '19.99',
-    quantity: 200,
+    quantity: 0,
     imageUrl:
       'https://images.unsplash.com/photo-1616763355603-9755a640a2a9?w=600&h=800&fit=crop',
     imageFile: null,
     createdAt: new Date(),
     updatedAt: new Date(),
+  },
+]
+
+const demoRestockAlerts = [
+  {
+    id: 5,
+    name: 'Screen Protector Pack',
+    quantity: 0,
+    costPrice: 8,
+    sellingPrice: 19.99,
+    status: 'out' as const,
+  },
+  {
+    id: 3,
+    name: 'Portable Speaker',
+    quantity: 3,
+    costPrice: 15,
+    sellingPrice: 49.99,
+    status: 'low' as const,
   },
 ]
 
@@ -147,6 +166,7 @@ export default function DemoPage() {
       insights={demoInsights}
       stats={demoStats}
       salesHistory={demoSalesHistory}
+      restockAlerts={demoRestockAlerts}
       isDemo
     />
   )

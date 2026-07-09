@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { getProducts, getSalesInsights, getInventoryStats, getSalesHistory } from '@/app/actions/inventory'
+import { getProducts, getSalesInsights, getInventoryStats, getSalesHistory, getRestockAlerts } from '@/app/actions/inventory'
 import { DashboardClient } from '@/components/dashboard-client'
 
 export default async function DashboardPage() {
@@ -11,11 +11,12 @@ export default async function DashboardPage() {
     redirect('/sign-in')
   }
 
-  const [products, insights, stats, salesHistory] = await Promise.all([
+  const [products, insights, stats, salesHistory, restockAlerts] = await Promise.all([
     getProducts(),
     getSalesInsights(),
     getInventoryStats(),
     getSalesHistory(),
+    getRestockAlerts(),
   ])
 
   return (
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
       insights={insights}
       stats={stats}
       salesHistory={salesHistory}
+      restockAlerts={restockAlerts}
     />
   )
 }
