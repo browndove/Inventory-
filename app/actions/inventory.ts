@@ -30,8 +30,8 @@ export async function createProduct(data: {
   costPrice: number
   sellingPrice: number
   quantity: number
-  imageUrl?: string
-  imageFile?: string
+  imageUrl?: string | null
+  imageFile?: string | null
 }) {
   const userId = await getUserId()
   const result = await db
@@ -55,8 +55,8 @@ export async function updateProduct(
     costPrice?: number
     sellingPrice?: number
     quantity?: number
-    imageUrl?: string
-    imageFile?: string
+    imageUrl?: string | null
+    imageFile?: string | null
   }
 ) {
   await getUserId()

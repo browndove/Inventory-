@@ -54,5 +54,5 @@ export function getProductImageSrc(product: {
   imageUrl?: string | null
   imageFile?: string | null
 }) {
-  return product.imageUrl || product.imageFile || null
+  return product.imageFile || product.imageUrl || null
 }

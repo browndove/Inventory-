@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatCedi } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { ProductImage } from '@/components/product-image'
+import { isProcessedInventoryImage } from '@/lib/remove-background'
 
 interface ProductFormProps {
   product?: any
@@ -122,14 +124,23 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
         setFormData((prev) => ({ ...prev, imageUrl: '' }))
       }
 
+      if (
+        finalImage &&
+        finalImage.startsWith('http') &&
+        !isProcessedInventoryImage(finalImage)
+      ) {
+        finalImage = await processImageUrl(finalImage)
+        setUploadedImage(finalImage)
+      }
+
       const data = {
         name: formData.name,
         description: formData.description || undefined,
         costPrice: parseFloat(formData.costPrice),
         sellingPrice: parseFloat(formData.sellingPrice),
         quantity: parseInt(formData.quantity),
-        imageUrl: undefined,
-        imageFile: finalImage || undefined,
+        imageUrl: null,
+        imageFile: finalImage || null,
       }
 
       if (
@@ -298,9 +309,20 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
           )}
         </div>
         {uploadedImage && (
-          <p className="text-xs text-muted-foreground">
-            Ready: {uploadedImage.split('/').pop()}
-          </p>
+          <div className="space-y-2">
+            <div className="relative aspect-square w-32 overflow-hidden rounded-lg bg-[repeating-conic-gradient(#e5e5e5_0%_25%,#fff_0%_50%)] bg-[length:16px_16px]">
+              <ProductImage
+                src={uploadedImage}
+                alt="Product preview"
+                className="object-contain"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isProcessedInventoryImage(uploadedImage)
+                ? 'Background removed'
+                : 'Will remove background on save'}
+            </p>
+          </div>
         )}
       </div>
 
