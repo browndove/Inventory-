@@ -3,7 +3,7 @@
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { products, sales } from '@/lib/db/schema'
-import { and, eq, desc } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 
@@ -14,20 +14,13 @@ async function getUserId() {
 }
 
 export async function getProducts() {
-  const userId = await getUserId()
-  return db
-    .select()
-    .from(products)
-    .where(eq(products.userId, userId))
-    .orderBy(desc(products.createdAt))
+  await getUserId()
+  return db.select().from(products).orderBy(desc(products.createdAt))
 }
 
 export async function getProductById(id: number) {
-  const userId = await getUserId()
-  const result = await db
-    .select()
-    .from(products)
-    .where(and(eq(products.id, id), eq(products.userId, userId)))
+  await getUserId()
+  const result = await db.select().from(products).where(eq(products.id, id))
   return result[0] || null
 }
 
@@ -66,10 +59,9 @@ export async function updateProduct(
     imageFile?: string
   }
 ) {
-  const userId = await getUserId()
-  
-  // Convert numbers to strings for numeric fields
-  const updateData: any = { ...data }
+  await getUserId()
+
+  const updateData: Record<string, unknown> = { ...data }
   if (data.costPrice !== undefined) {
     updateData.costPrice = data.costPrice.toString()
   }
@@ -83,17 +75,15 @@ export async function updateProduct(
       ...updateData,
       updatedAt: new Date(),
     })
-    .where(and(eq(products.id, id), eq(products.userId, userId)))
+    .where(eq(products.id, id))
     .returning()
   revalidatePath('/dashboard')
   return result[0]
 }
 
 export async function deleteProduct(id: number) {
-  const userId = await getUserId()
-  await db
-    .delete(products)
-    .where(and(eq(products.id, id), eq(products.userId, userId)))
+  await getUserId()
+  await db.delete(products).where(eq(products.id, id))
   revalidatePath('/dashboard')
 }
 
@@ -102,18 +92,15 @@ export async function recordSale(data: {
   quantitySold: number
 }) {
   const userId = await getUserId()
-  
-  // Get product
+
   const product = await getProductById(data.productId)
   if (!product) throw new Error('Product not found')
-  
-  // Calculate amounts
+
   const sellingPrice = parseFloat(product.sellingPrice as any)
   const costPrice = parseFloat(product.costPrice as any)
   const totalAmount = sellingPrice * data.quantitySold
   const costAmount = costPrice * data.quantitySold
-  
-  // Create sale record
+
   const saleResult = await db
     .insert(sales)
     .values({
@@ -124,8 +111,7 @@ export async function recordSale(data: {
       costAmount: costAmount.toString(),
     })
     .returning()
-  
-  // Update product quantity
+
   const newQuantity = Math.max(0, (product.quantity || 0) - data.quantitySold)
   await db
     .update(products)
@@ -133,23 +119,19 @@ export async function recordSale(data: {
       quantity: newQuantity,
       updatedAt: new Date(),
     })
-    .where(and(eq(products.id, data.productId), eq(products.userId, userId)))
-  
+    .where(eq(products.id, data.productId))
+
   revalidatePath('/dashboard')
   return saleResult[0]
 }
 
 export async function getSalesHistory() {
-  const userId = await getUserId()
-  return db
-    .select()
-    .from(sales)
-    .where(eq(sales.userId, userId))
-    .orderBy(desc(sales.createdAt))
+  await getUserId()
+  return db.select().from(sales).orderBy(desc(sales.createdAt))
 }
 
 export async function getSalesInsights() {
-  const userId = await getUserId()
+  await getUserId()
 
   const allSales = await db
     .select({
@@ -161,7 +143,6 @@ export async function getSalesInsights() {
     })
     .from(sales)
     .innerJoin(products, eq(sales.productId, products.id))
-    .where(eq(sales.userId, userId))
     .orderBy(desc(sales.createdAt))
 
   const days = 7
@@ -234,38 +215,30 @@ export async function getSalesInsights() {
 }
 
 export async function getInventoryStats() {
-  const userId = await getUserId()
-  const allProducts = await db
-    .select()
-    .from(products)
-    .where(eq(products.userId, userId))
-  
-  const allSales = await db
-    .select()
-    .from(sales)
-    .where(eq(sales.userId, userId))
-  
-  // Calculate stats
+  await getUserId()
+  const allProducts = await db.select().from(products)
+  const allSales = await db.select().from(sales)
+
   let totalCostValue = 0
   let totalInventoryValue = 0
   let totalProfit = 0
   let totalQuantity = 0
-  
+
   for (const product of allProducts) {
     const costPrice = parseFloat(product.costPrice as any)
     const sellingPrice = parseFloat(product.sellingPrice as any)
     const qty = product.quantity || 0
-    
+
     totalCostValue += costPrice * qty
     totalInventoryValue += sellingPrice * qty
     totalQuantity += qty
   }
-  
+
   for (const sale of allSales) {
     const profit = parseFloat(sale.totalAmount as any) - parseFloat(sale.costAmount as any)
     totalProfit += profit
   }
-  
+
   return {
     totalProducts: allProducts.length,
     totalQuantity,
