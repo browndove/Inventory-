@@ -15,6 +15,21 @@ interface ProductFormProps {
   onSuccess: () => void
 }
 
+async function processImageUrl(imageUrl: string) {
+  const response = await fetch('/api/process-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.error ?? 'Failed to process image URL')
+  }
+
+  return data.url as string
+}
+
 export function ProductForm({ product, onSuccess }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -23,10 +38,10 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
     sellingPrice: product?.sellingPrice || '',
     quantity: product?.quantity ?? '',
     imageUrl: product?.imageUrl || '',
-    imageFile: product?.imageFile || '',
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isProcessingUrl, setIsProcessingUrl] = useState(false)
   const [uploadedImage, setUploadedImage] = useState<string>(
     product?.imageFile || product?.imageUrl || ''
   )
@@ -52,7 +67,8 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
       }
 
       setUploadedImage(data.url)
-      toast.success('Image uploaded')
+      setFormData((prev) => ({ ...prev, imageUrl: '' }))
+      toast.success('Image uploaded with background removed')
     } catch (error) {
       console.error('Upload error:', error)
       toast.error(
@@ -60,6 +76,26 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
       )
     } finally {
       setIsUploading(false)
+    }
+  }
+
+  const handleProcessImageUrl = async () => {
+    const imageUrl = formData.imageUrl.trim()
+    if (!imageUrl) return
+
+    setIsProcessingUrl(true)
+    try {
+      const url = await processImageUrl(imageUrl)
+      setUploadedImage(url)
+      setFormData((prev) => ({ ...prev, imageUrl: '' }))
+      toast.success('Image processed with background removed')
+    } catch (error) {
+      console.error('Process URL error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to process image URL'
+      )
+    } finally {
+      setIsProcessingUrl(false)
     }
   }
 
@@ -78,14 +114,22 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
     setIsLoading(true)
 
     try {
+      let finalImage = uploadedImage
+
+      if (!finalImage && formData.imageUrl.trim()) {
+        finalImage = await processImageUrl(formData.imageUrl.trim())
+        setUploadedImage(finalImage)
+        setFormData((prev) => ({ ...prev, imageUrl: '' }))
+      }
+
       const data = {
         name: formData.name,
         description: formData.description || undefined,
         costPrice: parseFloat(formData.costPrice),
         sellingPrice: parseFloat(formData.sellingPrice),
         quantity: parseInt(formData.quantity),
-        imageUrl: formData.imageUrl || undefined,
-        imageFile: uploadedImage || undefined,
+        imageUrl: undefined,
+        imageFile: finalImage || undefined,
       }
 
       if (
@@ -136,6 +180,8 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
     hasPrices && sell > 0
       ? (((sell - cost) / sell) * 100).toFixed(1)
       : '0'
+
+  const imageBusy = isUploading || isProcessingUrl
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -208,14 +254,32 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="imageUrl">Image URL</Label>
-        <Input
-          id="imageUrl"
-          name="imageUrl"
-          type="url"
-          value={formData.imageUrl}
-          onChange={handleChange}
-          placeholder="https://example.com/image.jpg"
-        />
+        <div className="flex gap-2">
+          <Input
+            id="imageUrl"
+            name="imageUrl"
+            type="url"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            placeholder="https://example.com/image.jpg"
+            disabled={imageBusy}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={imageBusy || !formData.imageUrl.trim()}
+            onClick={handleProcessImageUrl}
+          >
+            {isProcessingUrl ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Process'
+            )}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Background is removed automatically for uploads and image links.
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -225,15 +289,17 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
             id="imageFile"
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-            disabled={isUploading}
+            disabled={imageBusy}
             onChange={handleImageUpload}
             className="file:mr-3 file:text-sm file:font-normal file:text-foreground"
           />
-          {isUploading && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />}
+          {isUploading && (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+          )}
         </div>
         {uploadedImage && (
           <p className="text-xs text-muted-foreground">
-            Image uploaded: {uploadedImage.split('/').pop()}
+            Ready: {uploadedImage.split('/').pop()}
           </p>
         )}
       </div>
@@ -252,7 +318,12 @@ export function ProductForm({ product, onSuccess }: ProductFormProps) {
         </div>
       )}
 
-      <Button type="submit" size="store" disabled={isLoading} className="w-full">
+      <Button
+        type="submit"
+        size="store"
+        disabled={isLoading || imageBusy}
+        className="w-full"
+      >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

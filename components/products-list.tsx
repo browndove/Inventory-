@@ -1,9 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import { Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ProductImage, getProductImageSrc } from '@/components/product-image'
 import { useMemo, useState } from 'react'
 import { ProductDetailView } from './product-detail-view'
 import { SaleDialog } from './sale-dialog'
@@ -85,19 +85,11 @@ export function ProductsList({ products }: { products: any[] }) {
                   className="group block w-full text-left transition-opacity hover:opacity-80"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted">
-                    {product.imageUrl || product.imageFile ? (
-                      <Image
-                        src={product.imageUrl || product.imageFile}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-contain object-center"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-sm text-muted-foreground/40">
-                        No image
-                      </div>
-                    )}
+                    <ProductImage
+                      src={getProductImageSrc(product)}
+                      alt={product.name}
+                      containerClassName="absolute inset-0"
+                    />
                   </div>
                 </button>
 

@@ -1,9 +1,9 @@
 'use client'
 
-import Image from 'next/image'
 import { useState } from 'react'
 import { Minus, Plus, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ProductImage, getProductImageSrc } from '@/components/product-image'
 import { formatCedi } from '@/lib/utils'
 import { SaleDialog } from './sale-dialog'
 import { EditProductDialog } from './edit-product-dialog'
@@ -134,20 +134,12 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
         {/* Center — image */}
         <div className="order-1 lg:order-2">
           <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-muted">
-            {product.imageUrl || product.imageFile ? (
-              <Image
-                src={product.imageUrl || product.imageFile}
-                alt={product.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 40vw"
-                className="object-contain object-center"
-                priority
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground/30">
-                No image
-              </div>
-            )}
+            <ProductImage
+              src={getProductImageSrc(product)}
+              alt={product.name}
+              containerClassName="absolute inset-0"
+              priority
+            />
           </div>
         </div>
 

@@ -1,9 +1,7 @@
-import { put } from '@vercel/blob'
-import { mkdir, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
+import { processUploadedImageFile } from '@/lib/process-product-image'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ALLOWED_TYPES = new Set([
@@ -13,10 +11,6 @@ const ALLOWED_TYPES = new Set([
   'image/gif',
   'image/avif',
 ])
-
-function sanitizeFileName(name: string) {
-  return name.replace(/[^a-zA-Z0-9._-]/g, '_')
-}
 
 function isAllowedImage(file: File) {
   if (ALLOWED_TYPES.has(file.type)) return true
@@ -53,30 +47,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const safeName = sanitizeFileName(file.name)
-  const uniqueName = `${Date.now()}-${safeName}`
-
   try {
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-      const blob = await put(`${session.user.id}/${uniqueName}`, file, {
-        access: 'public',
-      })
-
-      return NextResponse.json({ url: blob.url })
-    }
-
-    const uploadDir = join(process.cwd(), 'public', 'uploads', session.user.id)
-    await mkdir(uploadDir, { recursive: true })
-
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const filePath = join(uploadDir, uniqueName)
-    await writeFile(filePath, buffer)
-
-    return NextResponse.json({
-      url: `/uploads/${session.user.id}/${uniqueName}`,
-    })
+    const url = await processUploadedImageFile(file)
+    return NextResponse.json({ url })
   } catch (error) {
     console.error('Upload error:', error)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    const message =
+      error instanceof Error ? error.message : 'Upload failed'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
