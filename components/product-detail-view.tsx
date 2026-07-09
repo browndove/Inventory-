@@ -139,7 +139,8 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
                 src={product.imageUrl || product.imageFile}
                 alt={product.name}
                 fill
-                className="object-contain p-8"
+                sizes="(max-width: 1024px) 100vw, 40vw"
+                className="object-contain object-center"
                 priority
               />
             ) : (

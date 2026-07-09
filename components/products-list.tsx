@@ -90,7 +90,8 @@ export function ProductsList({ products }: { products: any[] }) {
                         src={product.imageUrl || product.imageFile}
                         alt={product.name}
                         fill
-                        className="object-contain p-6 transition-transform duration-500 group-hover:scale-[1.02]"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-contain object-center"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted-foreground/40">

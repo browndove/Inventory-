@@ -42,10 +42,5 @@
     "tailwindcss": "^4.2.0",
     "typescript": "5.7.3",
     "xlsx": "^0.18.5"
-  },
-  "pnpm": {
-    "overrides": {
-      "hono": "4.12.25"
-    }
   }
 }
