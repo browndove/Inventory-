@@ -7,7 +7,6 @@ import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
 
 export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   const router = useRouter()
@@ -40,20 +39,29 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   }
 
   return (
-    <main className="min-h-svh bg-background flex items-center justify-center px-4">
-      <Card className="w-full max-w-sm p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <div className="min-h-screen bg-background">
+      <header className="flex h-16 items-center justify-center px-6">
+        <Link
+          href="/sign-in"
+          className="text-sm font-medium tracking-[0.2em] text-foreground"
+        >
+          DILITRUST
+        </Link>
+      </header>
+
+      <main className="mx-auto flex max-w-md flex-col px-6 pb-20 pt-12">
+        <div className="mb-10 space-y-2">
+          <h1 className="text-3xl font-medium tracking-tight text-foreground">
             {isSignUp ? 'Create an account' : 'Welcome back'}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground">
             {isSignUp
-              ? 'Sign up to get started'
-              : 'Sign in to your account to continue'}
+              ? 'Sign up to manage your inventory'
+              : 'Sign in to continue'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           {isSignUp && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="name">Name</Label>
@@ -96,7 +104,7 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
             </p>
           )}
 
-          <Button type="submit" disabled={loading} className="w-full">
+          <Button type="submit" size="store" disabled={loading} className="w-full">
             {loading
               ? 'Please wait...'
               : isSignUp
@@ -105,16 +113,16 @@ export function AuthForm({ mode }: { mode: 'sign-in' | 'sign-up' }) {
           </Button>
         </form>
 
-        <p className="text-sm text-muted-foreground text-center mt-6">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
           <Link
             href={isSignUp ? '/sign-in' : '/sign-up'}
-            className="text-foreground font-medium underline-offset-4 hover:underline"
+            className="text-foreground underline-offset-4 hover:underline"
           >
             {isSignUp ? 'Sign in' : 'Sign up'}
           </Link>
         </p>
-      </Card>
-    </main>
+      </main>
+    </div>
   )
 }

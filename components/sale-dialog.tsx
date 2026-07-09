@@ -12,6 +12,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -19,6 +20,45 @@ import {
 interface SaleDialogProps {
   product: any
   onOpenChange: (open: boolean) => void
+}
+
+function SummaryRow({
+  label,
+  value,
+  bold,
+  highlight,
+}: {
+  label: string
+  value: string
+  bold?: boolean
+  highlight?: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between py-2 text-sm leading-relaxed">
+      <span
+        className={
+          highlight
+            ? 'font-semibold text-green-600'
+            : bold
+              ? 'font-medium text-foreground'
+              : 'text-muted-foreground'
+        }
+      >
+        {label}
+      </span>
+      <span
+        className={
+          highlight
+            ? 'font-semibold text-green-600'
+            : bold
+              ? 'font-medium text-foreground'
+              : 'text-foreground'
+        }
+      >
+        {value}
+      </span>
+    </div>
+  )
 }
 
 export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
@@ -43,15 +83,15 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
     setIsLoading(true)
 
     try {
-      const qty = parseInt(quantity)
+      const parsedQty = parseInt(quantity)
 
-      if (!qty || qty <= 0) {
+      if (!parsedQty || parsedQty <= 0) {
         toast.error('Please enter a valid quantity')
         setIsLoading(false)
         return
       }
 
-      if (qty > (product.quantity || 0)) {
+      if (parsedQty > (product.quantity || 0)) {
         toast.error(`Not enough inventory. Available: ${product.quantity}`)
         setIsLoading(false)
         return
@@ -59,7 +99,7 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
 
       await recordSale({
         productId: product.id,
-        quantitySold: qty,
+        quantitySold: parsedQty,
       })
 
       toast.success(`Sale recorded! Profit: ${formatCedi(profit)}`)
@@ -74,19 +114,22 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Record Sale</DialogTitle>
-          <DialogDescription>
-            {product.name} - Selling Price: {formatCedi(sellingPrice)}
-          </DialogDescription>
+          <div className="flex items-baseline justify-between gap-6 pt-1">
+            <DialogDescription className="min-w-0 truncate">
+              {product.name}
+            </DialogDescription>
+            <p className="shrink-0 text-sm text-muted-foreground">
+              Selling Price: {formatCedi(sellingPrice)}
+            </p>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="quantity" className="text-sm font-medium">
-              Quantity to Sell *
-            </Label>
+            <Label htmlFor="quantity">Quantity to Sell *</Label>
             <Input
               id="quantity"
               type="number"
@@ -103,40 +146,33 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
             </p>
           </div>
 
-          {/* Sale Summary */}
-          <div className="space-y-2 rounded-lg bg-muted/50 p-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Quantity:</span>
-              <span className="font-medium">{qty}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Selling Price:</span>
-              <span className="font-medium">{formatCedi(sellingPrice)}</span>
-            </div>
-            <div className="flex justify-between border-t border-border/50 pt-2 text-sm font-medium">
-              <span>Total Revenue:</span>
-              <span>{formatCedi(totalAmount)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Cost:</span>
-              <span className="font-medium">{formatCedi(costAmount)}</span>
-            </div>
-            <div className="flex justify-between border-t border-green-200 dark:border-green-900/30 pt-2 text-sm font-bold">
-              <span className="text-green-600 dark:text-green-400">Total Profit:</span>
-              <span className="text-green-600 dark:text-green-400">{formatCedi(profit)}</span>
-            </div>
+          <div className="space-y-3">
+            <SummaryRow label="Quantity:" value={String(qty)} />
+            <SummaryRow label="Selling Price:" value={formatCedi(sellingPrice)} />
+            <SummaryRow label="Total Revenue:" value={formatCedi(totalAmount)} bold />
+            <SummaryRow label="Cost:" value={formatCedi(costAmount)} />
+            <SummaryRow
+              label="Total Profit:"
+              value={formatCedi(profit)}
+              highlight
+            />
           </div>
 
-          <div className="flex gap-2">
-            <Button
+          <DialogFooter>
+            <button
               type="button"
-              variant="outline"
               onClick={() => handleOpenChange(false)}
               disabled={isLoading}
+              className="text-sm text-foreground transition-opacity hover:opacity-60 disabled:opacity-40"
             >
               Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading || !quantity} className="flex-1">
+            </button>
+            <Button
+              type="submit"
+              size="store"
+              disabled={isLoading || !quantity}
+              className="min-w-[65%] flex-1"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -146,7 +182,7 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
                 'Record Sale'
               )}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

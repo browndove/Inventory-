@@ -1,3 +1,3 @@
-# Inventory-
+# DILITRUST
 
-Smart inventory management system with product tracking, sales recording, and dashboard insights.
+DILITRUST inventory management — product tracking, sales recording, and dashboard insights.

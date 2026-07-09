@@ -10,21 +10,35 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 
-export function AddProductDialog() {
-  const [open, setOpen] = useState(false)
+type AddProductDialogProps = {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  showTrigger?: boolean
+}
+
+export function AddProductDialog({
+  open: controlledOpen,
+  onOpenChange,
+  showTrigger = false,
+}: AddProductDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled ? onOpenChange! : setInternalOpen
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button className="gap-2" onClick={() => setOpen(true)}>
-        <Plus className="h-4 w-4" />
-        Add Product
-      </Button>
-      <DialogContent className="max-w-lg">
+      {showTrigger && (
+        <Button className="gap-2" onClick={() => setOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add product
+        </Button>
+      )}
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>Add new product</DialogTitle>
           <DialogDescription>
             Create a new product entry for your inventory
           </DialogDescription>

@@ -41,7 +41,7 @@ export function InventoryStats({ stats }: StatsProps) {
       {metrics.map((metric, idx) => (
         <div
           key={idx}
-          className="min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4 lg:p-5"
+          className="min-w-0 space-y-1"
         >
           <p className="text-[10px] font-medium uppercase leading-tight tracking-wider text-muted-foreground sm:text-xs sm:tracking-widest">
             {metric.label}
