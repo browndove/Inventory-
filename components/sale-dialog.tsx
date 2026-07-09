@@ -73,7 +73,10 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
 
   const sellingPrice = parseFloat(product.sellingPrice as any)
   const costPrice = parseFloat(product.costPrice as any)
+  const available = product.quantity || 0
   const qty = parseInt(quantity) || 0
+  const exceedsAvailable = qty > available
+  const canSell = qty > 0 && !exceedsAvailable
   const totalAmount = qty * sellingPrice
   const costAmount = qty * costPrice
   const profit = totalAmount - costAmount
@@ -141,8 +144,13 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
               autoFocus
               required
             />
-            <p className="text-xs text-muted-foreground">
-              Available: {product.quantity || 0} units
+            <p
+              className={`text-xs ${
+                exceedsAvailable ? 'text-destructive' : 'text-muted-foreground'
+              }`}
+            >
+              Available: {available} units
+              {exceedsAvailable && ' — quantity exceeds stock'}
             </p>
           </div>
 
@@ -170,7 +178,7 @@ export function SaleDialog({ product, onOpenChange }: SaleDialogProps) {
             <Button
               type="submit"
               size="store"
-              disabled={isLoading || !quantity}
+              disabled={isLoading || !canSell}
               className="min-w-[65%] flex-1"
             >
               {isLoading ? (
