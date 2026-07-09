@@ -4,6 +4,8 @@ import { Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ProductImage, getProductImageSrc } from '@/components/product-image'
+import { ProductImageOverlays } from '@/components/product-image-overlays'
+import { formatCedi } from '@/lib/utils'
 import { useMemo, useState } from 'react'
 import { ProductDetailView } from './product-detail-view'
 import { SaleDialog } from './sale-dialog'
@@ -76,6 +78,7 @@ export function ProductsList({ products }: { products: any[] }) {
         <div className="grid grid-cols-1 gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((product) => {
             const inStock = (product.quantity || 0) > 0
+            const sellingPrice = parseFloat(product.sellingPrice as string)
 
             return (
               <article key={product.id} className="space-y-4">
@@ -89,6 +92,10 @@ export function ProductsList({ products }: { products: any[] }) {
                       src={getProductImageSrc(product)}
                       alt={product.name}
                       containerClassName="absolute inset-0"
+                    />
+                    <ProductImageOverlays
+                      price={formatCedi(sellingPrice)}
+                      outOfStock={!inStock}
                     />
                   </div>
                 </button>

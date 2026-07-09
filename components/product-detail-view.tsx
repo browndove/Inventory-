@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Minus, Plus, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ProductImage, getProductImageSrc } from '@/components/product-image'
+import { ProductImageOverlays } from '@/components/product-image-overlays'
 import { formatCedi } from '@/lib/utils'
 import { SaleDialog } from './sale-dialog'
 import { EditProductDialog } from './edit-product-dialog'
@@ -126,6 +127,10 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
               containerClassName="absolute inset-0"
               priority
             />
+            <ProductImageOverlays
+              price={formatCedi(sellingPrice)}
+              outOfStock={!inStock}
+            />
           </div>
         </div>
 
@@ -143,10 +148,6 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
               Sell
             </Button>
           </div>
-
-          {!inStock && (
-            <p className="text-sm text-muted-foreground">Out of stock</p>
-          )}
 
           <div className="flex flex-col gap-3 pt-2">
             <Button
