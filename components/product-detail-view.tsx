@@ -7,8 +7,7 @@ import { ProductImage, getProductImageSrc } from '@/components/product-image'
 import { formatCedi } from '@/lib/utils'
 import { SaleDialog } from './sale-dialog'
 import { EditProductDialog } from './edit-product-dialog'
-import { deleteProduct } from '@/app/actions/inventory'
-import { toast } from 'sonner'
+import { DeleteProductDialog } from './delete-product-dialog'
 
 type ProductDetailViewProps = {
   product: any
@@ -46,7 +45,7 @@ function AccordionSection({
 export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
   const [saleOpen, setSaleOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const costPrice = parseFloat(product.costPrice as any)
   const sellingPrice = parseFloat(product.sellingPrice as any)
@@ -55,19 +54,6 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
   const profitMargin =
     sellingPrice > 0 ? ((profitPerUnit / sellingPrice) * 100).toFixed(1) : '0'
   const inStock = quantity > 0
-
-  const handleDelete = async () => {
-    setDeleting(true)
-    try {
-      await deleteProduct(product.id)
-      toast.success('Product deleted')
-      onBack()
-    } catch {
-      toast.error('Failed to delete product')
-    } finally {
-      setDeleting(false)
-    }
-  }
 
   return (
     <>
@@ -175,10 +161,9 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
               variant="ghost"
               size="sm"
               className="h-auto justify-start px-0 text-sm text-muted-foreground hover:bg-transparent hover:text-destructive"
-              onClick={handleDelete}
-              disabled={deleting}
+              onClick={() => setDeleteOpen(true)}
             >
-              {deleting ? 'Deleting...' : 'Delete product'}
+              Delete product
             </Button>
           </div>
         </div>
@@ -195,6 +180,14 @@ export function ProductDetailView({ product, onBack }: ProductDetailViewProps) {
         <EditProductDialog
           product={product}
           onOpenChange={(open) => !open && setEditOpen(false)}
+        />
+      )}
+
+      {deleteOpen && (
+        <DeleteProductDialog
+          product={product}
+          onOpenChange={(open) => !open && setDeleteOpen(false)}
+          onDeleted={onBack}
         />
       )}
     </>
