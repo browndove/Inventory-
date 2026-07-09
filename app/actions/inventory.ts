@@ -127,7 +127,20 @@ export async function recordSale(data: {
 
 export async function getSalesHistory() {
   await getUserId()
-  return db.select().from(sales).orderBy(desc(sales.createdAt))
+  return db
+    .select({
+      id: sales.id,
+      productId: sales.productId,
+      productName: products.name,
+      quantitySold: sales.quantitySold,
+      totalAmount: sales.totalAmount,
+      costAmount: sales.costAmount,
+      createdAt: sales.createdAt,
+    })
+    .from(sales)
+    .innerJoin(products, eq(sales.productId, products.id))
+    .orderBy(desc(sales.createdAt))
+    .limit(50)
 }
 
 export async function getSalesInsights() {
@@ -139,6 +152,7 @@ export async function getSalesInsights() {
       productName: products.name,
       quantitySold: sales.quantitySold,
       totalAmount: sales.totalAmount,
+      costAmount: sales.costAmount,
       createdAt: sales.createdAt,
     })
     .from(sales)
@@ -166,6 +180,13 @@ export async function getSalesInsights() {
       dateLabel: date.toLocaleDateString('en-GH', { month: 'short', day: 'numeric' }),
       revenue: daySales.reduce(
         (sum, sale) => sum + parseFloat(sale.totalAmount as string),
+        0,
+      ),
+      profit: daySales.reduce(
+        (sum, sale) =>
+          sum +
+          parseFloat(sale.totalAmount as string) -
+          parseFloat(sale.costAmount as string),
         0,
       ),
       units: daySales.reduce((sum, sale) => sum + sale.quantitySold, 0),
@@ -203,6 +224,13 @@ export async function getSalesInsights() {
     (sum, sale) => sum + parseFloat(sale.totalAmount as string),
     0,
   )
+  const totalProfit = allSales.reduce(
+    (sum, sale) =>
+      sum +
+      parseFloat(sale.totalAmount as string) -
+      parseFloat(sale.costAmount as string),
+    0,
+  )
   const totalUnits = allSales.reduce((sum, sale) => sum + sale.quantitySold, 0)
 
   return {
@@ -210,6 +238,7 @@ export async function getSalesInsights() {
     mostSold,
     totalSales: allSales.length,
     totalRevenue,
+    totalProfit,
     totalUnits,
   }
 }

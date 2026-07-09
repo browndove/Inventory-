@@ -5,13 +5,13 @@ import { DashboardClient } from '@/components/dashboard-client'
 
 const demoInsights = {
   trend: [
-    { label: 'Mon', dateLabel: 'Mon', revenue: 120, units: 2 },
-    { label: 'Tue', dateLabel: 'Tue', revenue: 80, units: 1 },
-    { label: 'Wed', dateLabel: 'Wed', revenue: 200, units: 4 },
-    { label: 'Thu', dateLabel: 'Thu', revenue: 150, units: 3 },
-    { label: 'Fri', dateLabel: 'Fri', revenue: 300, units: 5 },
-    { label: 'Sat', dateLabel: 'Sat', revenue: 90, units: 2 },
-    { label: 'Sun', dateLabel: 'Sun', revenue: 60, units: 1 },
+    { label: 'Mon', dateLabel: 'Mon', revenue: 120, profit: 45, units: 2 },
+    { label: 'Tue', dateLabel: 'Tue', revenue: 80, profit: 28, units: 1 },
+    { label: 'Wed', dateLabel: 'Wed', revenue: 200, profit: 72, units: 4 },
+    { label: 'Thu', dateLabel: 'Thu', revenue: 150, profit: 55, units: 3 },
+    { label: 'Fri', dateLabel: 'Fri', revenue: 300, profit: 110, units: 5 },
+    { label: 'Sat', dateLabel: 'Sat', revenue: 90, profit: 32, units: 2 },
+    { label: 'Sun', dateLabel: 'Sun', revenue: 60, profit: 22, units: 1 },
   ],
   mostSold: [
     { productId: 1, name: 'Wireless Headphones', units: 12, revenue: 1199.88 },
@@ -20,8 +20,48 @@ const demoInsights = {
   ],
   totalSales: 18,
   totalRevenue: 1000,
+  totalProfit: 364,
   totalUnits: 65,
 }
+
+const demoStats = {
+  totalProducts: 5,
+  totalQuantity: 510,
+  totalCostValue: 4250,
+  totalInventoryValue: 18240,
+  totalProfit: 364,
+  totalSalesRecords: 18,
+}
+
+const demoSalesHistory = [
+  {
+    id: 1,
+    productId: 1,
+    productName: 'Wireless Headphones',
+    quantitySold: 2,
+    totalAmount: '199.98',
+    costAmount: '70.00',
+    createdAt: new Date(),
+  },
+  {
+    id: 2,
+    productId: 2,
+    productName: 'USB-C Cable (2m)',
+    quantitySold: 5,
+    totalAmount: '64.95',
+    costAmount: '12.50',
+    createdAt: new Date(Date.now() - 86400000),
+  },
+  {
+    id: 3,
+    productId: 3,
+    productName: 'Portable Speaker',
+    quantitySold: 1,
+    totalAmount: '49.99',
+    costAmount: '15.00',
+    createdAt: new Date(Date.now() - 172800000),
+  },
+]
 
 const demoProducts = [
   {
@@ -105,6 +145,8 @@ export default function DemoPage() {
       }}
       products={demoProducts}
       insights={demoInsights}
+      stats={demoStats}
+      salesHistory={demoSalesHistory}
       isDemo
     />
   )

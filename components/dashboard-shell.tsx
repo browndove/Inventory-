@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
+import type { DashboardView } from '@/components/dashboard-views'
 
 type StoreHeaderProps = {
   user?: {
@@ -74,8 +75,8 @@ type StoreMenuProps = {
   open: boolean
   onClose: () => void
   isDemo?: boolean
-  currentView: 'products' | 'overview'
-  onNavigate: (view: 'products' | 'overview') => void
+  currentView: DashboardView
+  onNavigate: (view: DashboardView) => void
   onSignOut: () => void
   onAddProduct?: () => void
 }
@@ -94,6 +95,7 @@ export function StoreMenu({
   const links = [
     { id: 'products' as const, label: 'Products' },
     { id: 'overview' as const, label: 'Overview' },
+    { id: 'business' as const, label: 'Business' },
   ]
 
   return (
@@ -171,8 +173,8 @@ type DashboardShellProps = {
   }
   isDemo?: boolean
   inventoryCount?: number
-  currentView: 'products' | 'overview'
-  onViewChange: (view: 'products' | 'overview') => void
+  currentView: DashboardView
+  onViewChange: (view: DashboardView) => void
   onAddProduct?: () => void
   children: React.ReactNode
 }
